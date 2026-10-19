@@ -1,0 +1,33 @@
+{
+  "name": "life-os",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host 127.0.0.1 --configLoader runner",
+    "build": "tsc -b && vite build --configLoader runner",
+    "preview": "vite preview --host 127.0.0.1",
+    "test": "vitest run --configLoader runner",
+    "test:rules": "node --test tests/rules.test.mjs",
+    "format": "prettier --write src tests *.ts *.json *.md"
+  },
+  "dependencies": {
+    "react": "19.3.0",
+    "react-dom": "19.3.0",
+    "react-router-dom": "7.18.4",
+    "firebase": "12.19.0",
+    "lucide-react": "0.468.0"
+  },
+  "devDependencies": {
+    "@types/react": "19.3.0",
+    "@types/react-dom": "19.3.0",
+    "@vitejs/plugin-react": "5.2.0",
+    "typescript": "5.9.3",
+    "vite": "7.3.6",
+    "vitest": "3.2.7",
+    "prettier": "3.9.9"
+  },
+  "overrides": {
+    "@types/node": "24.13.6"
+  }
+}

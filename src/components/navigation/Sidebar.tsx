@@ -3,13 +3,12 @@ import { Link, NavLink } from "react-router-dom";
 import {
   Orbit,
   X,
-  Plus,
+  Search,
   ChevronsLeft,
   ChevronsRight,
   ChevronDown,
 } from "lucide-react";
 import { useAuth } from "../../app/providers/AuthProvider";
-import { useEditor } from "../QuickAdd";
 import { navigation } from "./navigation";
 import { ProfileAvatar } from "../ProfileAvatar";
 export function Sidebar({
@@ -26,7 +25,6 @@ export function Sidebar({
   onToggle: () => void;
 }) {
   const { user } = useAuth();
-  const open = useEditor();
   const [hidden, setHidden] = useState<string[]>([]);
   return (
     <aside ref={sidebarRef} className={"sidebar " + (isOpen ? "is-open" : "")}>
@@ -54,18 +52,16 @@ export function Sidebar({
           <X />
         </button>
       </div>
-      <button
+      <Link
         className="capture-button"
-        title="Quick capture"
-        onClick={() => {
-          onClose();
-          open({ type: "inboxItems" });
-        }}
+        to="/search"
+        title="Global search"
+        aria-label="Global search"
+        onClick={onClose}
       >
-        <Plus size={19} />
-        <span className="nav-label">Quick capture</span>
-        <kbd className="nav-label">+</kbd>
-      </button>
+        <Search size={19} />
+        <span className="nav-label">Global search</span>
+      </Link>
       <nav aria-label="Main navigation">
         {["", "Work", "Life", "Capture", "System"].map((group) => (
           <section className="nav-section" key={group || "home"}>

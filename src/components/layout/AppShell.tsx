@@ -3,15 +3,13 @@ import { ThemeToggle } from "../ThemeToggle";
 import { ProfileAvatar } from "../ProfileAvatar";
 import { useState, useEffect, useRef } from "react";
 import { Link, Outlet, useLocation } from "react-router-dom";
-import { Plus, Menu } from "lucide-react";
+import { Search, Menu } from "lucide-react";
 import { useData } from "../../app/providers/DataProvider";
-import { useEditor } from "../QuickAdd";
 import { Skeleton, ErrorState } from "../feedback/Feedback";
 import { Sidebar } from "../navigation/Sidebar";
 import { MobileNavigation } from "../navigation/MobileNavigation";
 export function AppShell() {
   const { loading, error, retry } = useData();
-  const open = useEditor();
   const [menu, setMenu] = useState(false);
   const [collapsed, setCollapsed] = useState(
     localStorage.getItem("life-os-sidebar") === "collapsed",
@@ -99,17 +97,14 @@ export function AppShell() {
             <ProfileAvatar />
             <span>My profile</span>
           </Link>
-          {true && (
-            <button
-              className="button compact"
-              onClick={() => {
-                open({ type: "inboxItems" });
-              }}
-            >
-              <Plus size={17} />
-              Quick capture
-            </button>
-          )}
+          <Link
+            className="button compact"
+            to="/search"
+            aria-label="Global search"
+          >
+            <Search size={17} />
+            Global search
+          </Link>
         </header>
         <main id="main-content" className="main-content" tabIndex={-1}>
           {error ? (

@@ -136,8 +136,8 @@ export function AttachmentPicker({
     <section className="attachment-picker">
       <h3>Photos & documents</h3>
       <p>
-        Attach document scans, bill photos, or PDFs. Files stay in this browser
-        on this device.
+        Attach photos, idea references, document scans, or PDFs. Files stay in
+        this browser on this device.
       </p>
       <label className={"upload-zone " + (busy ? "is-busy" : "")}>
         <ImagePlus size={26} />

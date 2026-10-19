@@ -89,6 +89,7 @@ export type WalletDocument = Owned & {
   description: string;
 };
 export type CaptureNote = Owned & {
+  attachments?: Attachment[];
   title: string;
   description: string;
   stage: "seed" | "exploring" | "ready";

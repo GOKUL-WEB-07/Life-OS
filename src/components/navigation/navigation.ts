@@ -31,9 +31,7 @@ export const navigation = [
   { to: "/finance", label: "Finance", Icon: Wallet, group: "Life" },
   { to: "/reminders", label: "Reminders", Icon: Bell, group: "Life" },
   { to: "/inbox", label: "Inbox", Icon: Inbox, group: "Capture" },
-  { to: "/notes", label: "Notes", Icon: FileText, group: "Capture" },
   { to: "/ideas", label: "Ideas", Icon: Lightbulb, group: "Capture" },
   { to: "/archive", label: "Archive", Icon: Archive, group: "System" },
-  { to: "/search", label: "Search", Icon: Search, group: "System" },
   { to: "/settings", label: "Settings", Icon: Settings, group: "System" },
 ];

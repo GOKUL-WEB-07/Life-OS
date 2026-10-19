@@ -82,9 +82,12 @@ export function watchDemo(callback: () => void) {
 }
 export function resetDemo() {
   const data = demoData();
-  const files = [...data.documents, ...data.bills].flatMap(
-    (item) => item.attachments || [],
-  );
+  const files = [
+    ...data.documents,
+    ...data.bills,
+    ...data.ideas,
+    ...data.notes,
+  ].flatMap((item) => item.attachments || []);
   saveDemo(emptyWorkspace());
   files.forEach((file) => void deleteAttachment(file.id).catch(() => {}));
 }

@@ -202,7 +202,7 @@ export function EntityFields({
           </label>
         )}
         {description}
-        {["documents", "bills"].includes(type) && (
+        {["documents", "bills", "ideas"].includes(type) && (
           <AttachmentPicker
             files={(draft.attachments as Attachment[]) || []}
             onChange={(files) => set("attachments", files)}

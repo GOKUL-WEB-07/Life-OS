@@ -2,7 +2,13 @@ import { Profile } from "../features/profile/Profile";
 import { LifeModule } from "../features/life/LifeModule";
 import { Review } from "../features/life/Review";
 import { Home } from "../features/home/Home";
-import { Navigate, Outlet, createBrowserRouter, Link } from "react-router-dom";
+import {
+  Navigate,
+  Outlet,
+  createBrowserRouter,
+  createHashRouter,
+  Link,
+} from "react-router-dom";
 import { useAuth } from "./providers/AuthProvider";
 import { DataProvider } from "./providers/DataProvider";
 import { QuickAddProvider } from "../components/QuickAdd";
@@ -53,7 +59,11 @@ function NewProject() {
   useEffect(() => open({ type: "projects" }), [open]);
   return <Projects />;
 }
-export const router = createBrowserRouter([
+const createRouter =
+  import.meta.env.VITE_GITHUB_PAGES === "true"
+    ? createHashRouter
+    : createBrowserRouter;
+export const router = createRouter([
   { path: "/login", element: <Navigate to="/home" replace /> },
   {
     element: <Protected />,

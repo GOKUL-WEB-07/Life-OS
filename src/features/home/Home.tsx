@@ -72,7 +72,7 @@ export function Home() {
       <section className="life-hero cinematic-hero">
         <img
           className="hero-backdrop"
-          src="/art/projects-feature.png"
+          src={import.meta.env.BASE_URL + "art/projects-feature.png"}
           alt="Creative project planning with task cards, models and a timeline"
         />
         <div className="hero-shade" />

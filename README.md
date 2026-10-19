@@ -51,3 +51,9 @@ See [Firebase setup](docs/FIREBASE-SETUP.md) and [current implementation notes](
 ## Artwork
 
 Generated feature artwork is included in `public/art`. See [artwork descriptions and prompts](docs/ARTWORK.md).
+
+## GitHub Pages
+
+Live app: https://gokul-web-07.github.io/Life-OS/
+
+GitHub Actions builds and publishes `dist` on every push to `main`. The Pages build uses `/Life-OS/` as the asset base and hash navigation so refreshed links work on static hosting. Run `npm run build:pages` to reproduce this build locally. GitHub Pages must use **GitHub Actions** as its deployment source; do not serve the source repository root.

@@ -81,8 +81,8 @@ export function LifeModule({
             className="module-art"
             src={
               type === "ideas"
-                ? "/art/ideas-feature.png"
-                : "/art/documents-feature.png"
+                ? import.meta.env.BASE_URL + "art/ideas-feature.png"
+                : import.meta.env.BASE_URL + "art/documents-feature.png"
             }
             alt={
               type === "ideas"

@@ -6,10 +6,11 @@
   "scripts": {
     "dev": "vite --host 127.0.0.1 --configLoader runner",
     "build": "tsc -b && vite build --configLoader runner",
-    "preview": "vite preview --host 127.0.0.1",
+    "preview": "vite preview --host 127.0.0.1 --configLoader runner",
     "test": "vitest run --configLoader runner",
     "test:rules": "node --test tests/rules.test.mjs",
-    "format": "prettier --write src tests *.ts *.json *.md"
+    "format": "prettier --write src tests *.ts *.json *.md",
+    "build:pages": "node scripts/build-pages.mjs"
   },
   "dependencies": {
     "react": "19.3.0",

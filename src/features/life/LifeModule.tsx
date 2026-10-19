@@ -1,12 +1,18 @@
-import { AttachmentGallery } from "../../components/Attachments";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Plus,
   FileText,
   Lightbulb,
   CreditCard,
-  ArrowRight,
+  ArrowUpRight,
+  Pencil,
+  CalendarDays,
+  Check,
 } from "lucide-react";
+import {
+  AttachmentGallery,
+  useAttachmentUrl,
+} from "../../components/Attachments";
 import { useData } from "../../app/providers/DataProvider";
 import { useEditor } from "../../components/QuickAdd";
 import { PageHeader } from "../../components/ui/Fields";
@@ -14,18 +20,278 @@ import { EmptyState } from "../../components/feedback/Feedback";
 import { money, monthly, nextRenewal } from "../../utils/life";
 import { useSaveAction } from "../../hooks/useSaveAction";
 import { useToday } from "../../hooks/useToday";
-import type { CollectionName } from "../../types/models";
-export function LifeModule({
+import { addDays, dateFrom } from "../../utils/dates";
+import type { DataMap } from "../../types/models";
+const cardDate = (value: string) =>
+  dateFrom(value).toLocaleDateString(undefined, {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+  });
+type LifeType = "subscriptions" | "documents" | "notes" | "ideas" | "bills";
+const cycleLabel: Record<string, string> = {
+  monthly: "Monthly",
+  quarterly: "Quarterly",
+  yearly: "Yearly",
+  weekly: "Weekly",
+  once: "One-time",
+};
+function RecordCard({
   type,
+  item,
 }: {
-  type: "subscriptions" | "documents" | "notes" | "ideas" | "bills";
+  type: LifeType;
+  item: DataMap[LifeType];
 }) {
-  const { data, saveItem } = useData();
+  const open = useEditor();
+  const { updateWithHistory, history } = useData();
+  const { run, busy, error } = useSaveAction();
+  const today = useToday();
+  const files = "attachments" in item ? item.attachments || [] : [];
+  const photo = files.find((f) => f.type.startsWith("image/"));
+  const { url } = useAttachmentUrl(photo);
+  const cover = ["documents", "bills", "ideas"].includes(type);
+  const art =
+    import.meta.env.BASE_URL +
+    "art/" +
+    (type === "ideas" ? "ideas" : "documents") +
+    "-feature.png";
+  const label =
+    type === "ideas"
+      ? "idea"
+      : type === "documents"
+        ? "document"
+        : type === "bills"
+          ? "bill"
+          : "note";
+  const edit = () => open({ type, id: item.id });
+  const disabled = busy || history.busy;
+  return (
+    <article
+      className={
+        "detail-card detail-card-" + type + (cover ? " has-cover" : "")
+      }
+    >
+      {cover && (
+        <button
+          className={"detail-card-media " + (url ? "has-document-photo" : "")}
+          type="button"
+          aria-label={"Open " + item.title}
+          onClick={edit}
+        >
+          <img
+            src={url || art}
+            alt={
+              url
+                ? item.title + " attachment preview"
+                : type === "ideas"
+                  ? "A light bulb and connected brainstorming notes"
+                  : "Organized documents and receipts"
+            }
+          />
+          {"category" in item && item.category && (
+            <span className="media-label">{item.category}</span>
+          )}
+          {"stage" in item && <span className="media-label">{item.stage}</span>}
+        </button>
+      )}
+      <div className="detail-card-body">
+        <header className="detail-card-heading">
+          {!cover && (
+            <span className="detail-card-icon">
+              {type === "subscriptions" ? (
+                <CreditCard size={21} />
+              ) : (
+                <FileText size={21} />
+              )}
+            </span>
+          )}
+          <div>
+            <button className="detail-title" type="button" onClick={edit}>
+              <h2>{item.title}</h2>
+            </button>
+            {"category" in item && !cover && (
+              <span className="detail-category">{item.category}</span>
+            )}
+          </div>
+          <button
+            className="icon-button edit-card"
+            aria-label={"Edit " + item.title}
+            onClick={edit}
+          >
+            <Pencil size={16} />
+          </button>
+        </header>
+        {item.description && (
+          <p className="detail-description">{item.description}</p>
+        )}
+        {"cycle" in item && (
+          <>
+            <div className="invoice-summary">
+              <div className="invoice-caption">
+                <span>Next renewal</span>
+                <span
+                  className={"state-pill " + (item.active ? "is-active" : "")}
+                >
+                  {item.active ? "Active" : "Paused"}
+                </span>
+              </div>
+              <div className="invoice-amount">
+                {money(item.amount, item.currency)}
+                <small>
+                  /{" "}
+                  {item.cycle === "once"
+                    ? "one-time"
+                    : item.cycle.replace("ly", "")}
+                </small>
+              </div>
+              <div className="invoice-date">
+                <CalendarDays size={15} />
+                {cardDate(item.date)}
+              </div>
+            </div>
+            <dl className="card-facts">
+              <div>
+                <dt>Billing cycle</dt>
+                <dd>{cycleLabel[item.cycle]}</dd>
+              </div>
+              <div>
+                <dt>Reminder</dt>
+                <dd>{item.reminderDays} days before</dd>
+              </div>
+            </dl>
+          </>
+        )}
+        {type === "documents" && "location" in item && (
+          <dl className="card-facts">
+            <div>
+              <dt>Expiry date</dt>
+              <dd
+                className={item.date && item.date < today ? "danger-text" : ""}
+              >
+                {item.date ? cardDate(item.date) : "No expiry"}
+              </dd>
+            </div>
+            <div>
+              <dt>Reminder</dt>
+              <dd>{item.reminderDays} days before</dd>
+            </div>
+            {item.reference && (
+              <div>
+                <dt>Reference</dt>
+                <dd>{item.reference}</dd>
+              </div>
+            )}
+            <div className="wide-fact">
+              <dt>Original location</dt>
+              <dd>{item.location || "Not added yet"}</dd>
+            </div>
+          </dl>
+        )}
+        {type === "bills" && "amount" in item && "completed" in item && (
+          <>
+            <div className="invoice-summary">
+              <div className="invoice-caption">
+                <span>Bill amount</span>
+                <span
+                  className={
+                    "state-pill " + (item.completed ? "is-active" : "")
+                  }
+                >
+                  {item.completed ? "Paid" : "Pending"}
+                </span>
+              </div>
+              <div className="invoice-amount">
+                {money(item.amount, item.currency)}
+              </div>
+              <div className="invoice-date">
+                <CalendarDays size={15} />
+                Due {cardDate(item.date)}
+              </div>
+            </div>
+          </>
+        )}
+        {"stage" in item && !cover && (
+          <div className="note-stage">
+            <span className="state-pill">{item.stage}</span>
+          </div>
+        )}
+        {!!files.length && (
+          <details className="card-attachments">
+            <summary>
+              {files.length} attached {files.length === 1 ? "file" : "files"}
+            </summary>
+            <AttachmentGallery files={files} />
+          </details>
+        )}
+        {error && (
+          <p role="alert" className="form-error">
+            {error}
+          </p>
+        )}
+        <footer className="detail-card-footer">
+          {"cycle" in item ? (
+            <button
+              className="card-action"
+              disabled={disabled || !item.active}
+              onClick={() =>
+                void run(() =>
+                  updateWithHistory(
+                    "subscriptions",
+                    item.id,
+                    {
+                      active: item.cycle !== "once",
+                      date: nextRenewal(item.date, item.cycle),
+                    },
+                    "Renewal marked paid",
+                  ),
+                )
+              }
+            >
+              {busy ? "Saving..." : "Mark paid & advance"}
+              <ArrowUpRight size={17} />
+            </button>
+          ) : type === "bills" && "completed" in item ? (
+            <button
+              className="card-action"
+              disabled={disabled}
+              onClick={() =>
+                void run(() =>
+                  updateWithHistory(
+                    "bills",
+                    item.id,
+                    { completed: !item.completed },
+                    item.completed ? "Bill marked unpaid" : "Bill marked paid",
+                  ),
+                )
+              }
+            >
+              {item.completed ? "Mark unpaid" : "Mark paid"}
+              <Check size={17} />
+            </button>
+          ) : (
+            <button className="card-action" onClick={edit}>
+              View {label}
+              <ArrowUpRight size={17} />
+            </button>
+          )}
+        </footer>
+      </div>
+    </article>
+  );
+}
+export function LifeModule({ type }: { type: LifeType }) {
+  const { data } = useData();
   const open = useEditor();
   const today = useToday();
   const [query, setQuery] = useState("");
-  const [stage, setStage] = useState("all");
-  const { run, busy, error } = useSaveAction();
+  const [filter, setFilter] = useState("all");
+  const [status, setStatus] = useState("all");
+  useEffect(() => {
+    setQuery("");
+    setFilter("all");
+    setStatus("all");
+  }, [type]);
   const titles = {
     subscriptions: "Subscriptions",
     documents: "Document wallet",
@@ -34,19 +300,76 @@ export function LifeModule({
     bills: "Finance",
   };
   const details = {
-    subscriptions:
-      "Know what renews next and what your recurring commitments cost.",
-    documents: "What you have, where it is, and when it expires.",
-    notes: "A quiet place to keep your thoughts and useful references.",
-    ideas: "Capture a spark. Explore the possibilities. Make it real.",
-    bills: "Keep bills, EMIs, and upcoming payments in view.",
+    subscriptions: "A clear view of what you pay, and what renews next.",
+    documents: "Your important documents, organized and within reach.",
+    notes: "Your thoughts and references, all in one place.",
+    ideas: "Capture a spark. Give it room to grow.",
+    bills: "Your bills, receipts, and upcoming payments.",
   };
-  const rows = data[type].filter(
-    (i) =>
-      (!("archived" in i) || !i.archived) &&
-      JSON.stringify(i).toLowerCase().includes(query.toLowerCase()) &&
-      (stage === "all" || ("stage" in i && i.stage === stage)),
-  );
+  const filters =
+    type === "subscriptions"
+      ? [
+          ["all", "All"],
+          ["monthly", "Monthly"],
+          ["quarterly", "Quarterly"],
+          ["yearly", "Yearly"],
+          ["weekly", "Weekly"],
+          ["once", "One-time"],
+        ]
+      : type === "documents"
+        ? [
+            ["all", "All documents"],
+            ["soon", "Expiring soon"],
+            ["expired", "Expired"],
+            ["no-expiry", "No expiry"],
+          ]
+        : type === "bills"
+          ? [
+              ["all", "All bills"],
+              ["pending", "Pending"],
+              ["paid", "Paid"],
+            ]
+          : [
+              ["all", "All"],
+              ["seed", "Seed"],
+              ["exploring", "Exploring"],
+              ["ready", "Ready"],
+            ];
+  const rows = data[type].filter((i) => {
+    if ("archived" in i && i.archived) return false;
+    if (
+      !(
+        i.title +
+        " " +
+        i.description +
+        ("category" in i ? " " + i.category : "")
+      )
+        .toLowerCase()
+        .includes(query.toLowerCase())
+    )
+      return false;
+    if (type === "subscriptions" && "cycle" in i)
+      return (
+        (filter === "all" || i.cycle === filter) &&
+        (status === "all" || (status === "active" ? i.active : !i.active))
+      );
+    if (type === "documents" && "location" in i)
+      return (
+        filter === "all" ||
+        (filter === "expired"
+          ? !!i.date && i.date < today
+          : filter === "soon"
+            ? !!i.date &&
+              i.date >= today &&
+              i.date <= addDays(today, i.reminderDays)
+            : !i.date)
+      );
+    if (type === "bills" && "completed" in i)
+      return (
+        filter === "all" || (filter === "paid" ? i.completed : !i.completed)
+      );
+    return filter === "all" || ("stage" in i && i.stage === filter);
+  });
   const totals = Object.entries(
     data.subscriptions.reduce(
       (a, s) => {
@@ -58,192 +381,99 @@ export function LifeModule({
   );
   return (
     <>
-      <div className={"module-heading module-heading-" + type}>
-        <PageHeader
-          title={titles[type]}
-          description={details[type]}
-          action={
-            <button className="button" onClick={() => open({ type })}>
-              <Plus size={18} />
-              Add{" "}
-              {type === "bills"
-                ? "bill"
-                : type === "ideas"
-                  ? "idea"
-                  : type === "documents"
-                    ? "document"
-                    : type.slice(0, -1)}
-            </button>
-          }
-        />
-        {["documents", "ideas", "bills"].includes(type) && (
-          <img
-            className="module-art"
-            src={
-              type === "ideas"
-                ? import.meta.env.BASE_URL + "art/ideas-feature.png"
-                : import.meta.env.BASE_URL + "art/documents-feature.png"
-            }
-            alt={
-              type === "ideas"
-                ? "A light bulb and connected sketch notes symbolize brainstorming"
-                : "A folder with documents, an ID and receipt"
-            }
-          />
-        )}
-      </div>
-      {type === "subscriptions" && (
-        <div className="life-stats">
-          {totals.length ? (
-            totals.map(([c, n]) => (
-              <div className="panel" key={c}>
-                <small>Monthly equivalent - {c}</small>
-                <h2>{money(n, c)}</h2>
-                <span>{money(n * 12, c)} / year</span>
+      <PageHeader
+        title={titles[type]}
+        description={details[type]}
+        action={
+          <button className="button" onClick={() => open({ type })}>
+            <Plus size={18} />
+            Add{" "}
+            {type === "subscriptions"
+              ? "subscription"
+              : type === "documents"
+                ? "document"
+                : type === "bills"
+                  ? "bill"
+                  : type === "ideas"
+                    ? "idea"
+                    : "note"}
+          </button>
+        }
+      />
+      {type === "subscriptions" && totals.length > 0 && (
+        <div className="commitment-summary">
+          {totals.map(([currency, total]) => (
+            <div key={currency} className="commitment-pair">
+              <div>
+                <span>Monthly commitment</span>
+                <strong>{money(total, currency)}</strong>
               </div>
-            ))
-          ) : (
-            <div className="panel">No recurring commitments yet.</div>
-          )}
+              <div>
+                <span>Yearly equivalent</span>
+                <strong>{money(total * 12, currency)}</strong>
+              </div>
+            </div>
+          ))}
         </div>
       )}
-      {type === "documents" && (
-        <p className="wallet-notice">
-          <FileText size={20} />
-          Add document scans and original-file references. Attached files are
-          stored on this device; keep a backup of important originals.
-        </p>
-      )}
-      <div className="module-tools">
+      <div className="records-toolbar">
+        <div
+          className="tabs segmented-tabs"
+          aria-label={titles[type] + " filters"}
+        >
+          {filters.map(([id, label]) => (
+            <button
+              key={id}
+              aria-pressed={filter === id}
+              className={filter === id ? "selected" : ""}
+              onClick={() => setFilter(id)}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+        {type === "subscriptions" && (
+          <select
+            className="compact-filter"
+            aria-label="Subscription status"
+            value={status}
+            onChange={(e) => setStatus(e.target.value)}
+          >
+            <option value="all">All statuses</option>
+            <option value="active">Active</option>
+            <option value="paused">Paused</option>
+          </select>
+        )}
         <input
-          aria-label="Filter records"
+          className="record-search"
           type="search"
-          placeholder="Filter by name or details..."
+          aria-label="Filter records"
+          placeholder="Filter records..."
           value={query}
           onChange={(e) => setQuery(e.target.value)}
         />
-        {["ideas", "notes"].includes(type) && (
-          <select
-            aria-label="Filter stage"
-            value={stage}
-            onChange={(e) => setStage(e.target.value)}
-          >
-            {["all", "seed", "exploring", "ready"].map((s) => (
-              <option key={s}>{s}</option>
-            ))}
-          </select>
-        )}
       </div>
-      {error && (
-        <p role="alert" className="form-error">
-          {error}
-        </p>
-      )}
       {rows.length ? (
-        <div className={type === "ideas" ? "idea-board" : "record-grid"}>
+        <div className="detail-card-grid">
           {rows.map((item) => (
-            <article className={"record-card " + type} key={item.id}>
-              <span className="record-icon">
-                {type === "ideas" ? (
-                  <Lightbulb />
-                ) : type === "subscriptions" || type === "bills" ? (
-                  <CreditCard />
-                ) : (
-                  <FileText />
-                )}
-              </span>
-              <button
-                className="row-title"
-                onClick={() => open({ type, id: item.id })}
-              >
-                <h2>{item.title}</h2>
-              </button>
-              {"category" in item && (
-                <span className="record-tag">{item.category}</span>
-              )}
-              {"stage" in item && (
-                <span className="record-tag">{item.stage}</span>
-              )}
-              <p className="record-description">
-                {item.description ||
-                  (type === "ideas"
-                    ? "Open this idea to explore your thoughts, questions, and next steps."
-                    : "Add details to keep everything in one place.")}
-              </p>
-              {"amount" in item && (
-                <h3>
-                  {money(item.amount, item.currency)}{" "}
-                  {"cycle" in item && <small>/ {item.cycle}</small>}
-                </h3>
-              )}
-              {"location" in item && (
-                <p>
-                  Original: {item.location || "Location not set"}
-                  {item.reference && (
-                    <>
-                      <br />
-                      Reference: {item.reference}
-                    </>
-                  )}
-                </p>
-              )}
-              {"attachments" in item && (
-                <AttachmentGallery files={item.attachments} />
-              )}
-              {"date" in item && item.date && (
-                <p className={item.date < today ? "danger-text" : ""}>
-                  {type === "documents" ? "Expires" : "Due"} {item.date}
-                </p>
-              )}
-              {"active" in item && (
-                <>
-                  <span>{item.active ? "Active" : "Paused"}</span>
-                  <button
-                    className="text-button"
-                    disabled={busy || !item.active}
-                    onClick={() =>
-                      void run(() =>
-                        saveItem(
-                          "subscriptions",
-                          {
-                            ...item,
-                            active: item.cycle !== "once",
-                            date: nextRenewal(item.date, item.cycle),
-                          },
-                          item.id,
-                        ),
-                      )
-                    }
-                  >
-                    Mark paid & advance <ArrowRight size={15} />
-                  </button>
-                </>
-              )}
-              {type === "bills" && "completed" in item && (
-                <button
-                  className="button secondary compact"
-                  disabled={busy}
-                  onClick={() =>
-                    void run(() =>
-                      saveItem(
-                        "bills",
-                        { ...item, completed: !item.completed },
-                        item.id,
-                      ),
-                    )
-                  }
-                >
-                  {item.completed ? "Paid - undo" : "Mark paid"}
-                </button>
-              )}
-            </article>
+            <RecordCard key={item.id} type={type} item={item} />
           ))}
         </div>
       ) : (
         <EmptyState
-          title={query ? "No matching records" : "Make room for what matters."}
+          title={
+            query || filter !== "all"
+              ? "No matching records"
+              : "Nothing here yet."
+          }
           detail="Use the add button to create your first record."
         />
+      )}
+      {type === "documents" && (
+        <p className="storage-caption">
+          Document photos and PDFs are stored on this device. Keep a backup of
+          important originals.
+        </p>
       )}
     </>
   );

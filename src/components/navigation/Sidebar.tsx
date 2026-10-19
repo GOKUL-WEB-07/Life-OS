@@ -60,7 +60,7 @@ export function Sidebar({
         onClick={onClose}
       >
         <Search size={19} />
-        <span className="nav-label">Global search</span>
+        <span className="nav-label">Search</span>
       </Link>
       <nav aria-label="Main navigation">
         {["", "Work", "Life", "Capture", "System"].map((group) => (

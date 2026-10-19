@@ -1,3 +1,4 @@
+import { HistoryControls } from "../HistoryControls";
 import { Motion } from "../Motion";
 import { ThemeToggle } from "../ThemeToggle";
 import { ProfileAvatar } from "../ProfileAvatar";
@@ -92,18 +93,18 @@ export function AppShell() {
           <Link to="/reminders" className="top-reminders">
             Reminders
           </Link>
+          <HistoryControls />
           <ThemeToggle />
           <Link className="top-profile" to="/profile" aria-label="My profile">
             <ProfileAvatar />
             <span>My profile</span>
           </Link>
           <Link
-            className="button compact"
+            className="button compact search-icon-link"
             to="/search"
             aria-label="Global search"
           >
             <Search size={17} />
-            Global search
           </Link>
         </header>
         <main id="main-content" className="main-content" tabIndex={-1}>

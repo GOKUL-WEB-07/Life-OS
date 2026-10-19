@@ -18,3 +18,6 @@ output/
 *service-account*.json
 
 .playwright-cli/
+
+# Download Satoshi for website embedding without redistributing font binaries.
+public/fonts/*.woff2

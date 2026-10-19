@@ -1,3 +1,4 @@
+import type { HistoryState } from "../../utils/history";
 import { createContext, useContext } from "react";
 import type { AppData, CollectionName, Input } from "../../types/models";
 type DataState = {
@@ -12,6 +13,15 @@ type DataState = {
     source?: string,
   ) => Promise<string>;
   deleteItem: (type: CollectionName, id: string) => Promise<void>;
+  history: HistoryState;
+  undo: () => Promise<void>;
+  redo: () => Promise<void>;
+  updateWithHistory: <K extends CollectionName>(
+    type: K,
+    id: string,
+    patch: Partial<Input<K>>,
+    label: string,
+  ) => Promise<void>;
   toggleTask: (id: string) => Promise<void>;
   toggleReminder: (id: string) => Promise<void>;
 };

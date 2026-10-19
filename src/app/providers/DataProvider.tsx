@@ -1,4 +1,12 @@
-import { useEffect, useState, type ReactNode } from "react";
+import { UndoHistory, patchAction } from "../../utils/history";
+import { useToast } from "../../components/feedback/Feedback";
+import {
+  useEffect,
+  useRef,
+  useState,
+  useSyncExternalStore,
+  type ReactNode,
+} from "react";
 import {
   collections,
   emptyData,
@@ -19,6 +27,18 @@ export function DataProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [revision, setRevision] = useState(0);
+  const dataRef = useRef(data);
+  dataRef.current = data;
+  const [historyManager] = useState(() => new UndoHistory());
+  const history = useSyncExternalStore(
+    historyManager.subscribe,
+    historyManager.getSnapshot,
+    historyManager.getSnapshot,
+  );
+  const toast = useToast();
+  useEffect(() => {
+    historyManager.clear();
+  }, [user?.uid, historyManager]);
   useEffect(() => {
     setData(emptyData);
     setLoading(true);
@@ -49,22 +69,54 @@ export function DataProvider({ children }: { children: ReactNode }) {
     validate(type, input as unknown as Record<string, unknown>, data);
     return save(type, input, id, source);
   }
+  async function updateWithHistory<K extends CollectionName>(
+    type: K,
+    id: string,
+    patch: Partial<Input<K>>,
+    label: string,
+  ) {
+    const current = dataRef.current[type].find((item) => item.id === id);
+    if (!current) throw new Error("This item no longer exists.");
+    const before = Object.fromEntries(
+      Object.keys(patch).map((key) => [
+        key,
+        (current as unknown as Record<string, unknown>)[key],
+      ]),
+    );
+    await historyManager.execute(
+      patchAction<Record<string, unknown>>({
+        label,
+        before,
+        after: patch as Record<string, unknown>,
+        read: () =>
+          dataRef.current[type].find((item) => item.id === id) as unknown as
+            Record<string, unknown> | undefined,
+        write: async (value) => {
+          validate(type, value, dataRef.current);
+          await save(type, value as Input<K>, id);
+        },
+      }),
+    );
+    toast(label + ". Undo is available in the toolbar.");
+  }
   async function toggleTask(id: string) {
     const task = data.tasks.find((t) => t.id === id);
     if (!task) throw new Error("Task no longer exists.");
-    await saveItem(
+    await updateWithHistory(
       "tasks",
-      { ...task, ...taskCompletion(!task.completed) },
       id,
+      taskCompletion(!task.completed),
+      task.completed ? "Task reopened" : "Task completed",
     );
   }
   async function toggleReminder(id: string) {
     const reminder = data.reminders.find((r) => r.id === id);
     if (!reminder) throw new Error("Reminder no longer exists.");
-    await saveItem(
+    await updateWithHistory(
       "reminders",
-      { ...reminder, completed: !reminder.completed },
       id,
+      { completed: !reminder.completed },
+      reminder.completed ? "Reminder reopened" : "Reminder completed",
     );
   }
   const relatedData = {
@@ -78,6 +130,10 @@ export function DataProvider({ children }: { children: ReactNode }) {
     <Context.Provider
       value={{
         data: relatedData,
+        history,
+        undo: () => historyManager.undo(),
+        redo: () => historyManager.redo(),
+        updateWithHistory,
         loading,
         error,
         retry: () => setRevision((r) => r + 1),

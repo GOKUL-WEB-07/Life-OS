@@ -64,9 +64,12 @@ export function Home() {
             {name}.
           </h1>
         </div>
-        <Link className="button" to="/search" aria-label="Global search">
+        <Link
+          className="button search-icon-link"
+          to="/search"
+          aria-label="Global search"
+        >
           <Search size={18} />
-          Global search
         </Link>
       </div>
       <section className="life-hero cinematic-hero">

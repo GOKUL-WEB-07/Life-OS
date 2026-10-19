@@ -12,7 +12,6 @@ import {
   Lightbulb,
   Archive,
   Search,
-  Settings,
   ListChecks,
 } from "lucide-react";
 export const navigation = [
@@ -33,5 +32,4 @@ export const navigation = [
   { to: "/inbox", label: "Inbox", Icon: Inbox, group: "Capture" },
   { to: "/ideas", label: "Ideas", Icon: Lightbulb, group: "Capture" },
   { to: "/archive", label: "Archive", Icon: Archive, group: "System" },
-  { to: "/settings", label: "Settings", Icon: Settings, group: "System" },
 ];

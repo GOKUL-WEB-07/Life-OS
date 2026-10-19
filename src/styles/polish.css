@@ -677,3 +677,42 @@ textarea {
     transform: none;
   }
 }
+.profile-cover .banner-upload {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 13px;
+  border: 1px solid #ffffff40;
+  border-radius: 20px;
+  background: #0009;
+  color: #fff;
+  font-size: 12px;
+  cursor: pointer;
+  backdrop-filter: blur(8px);
+}
+.banner-upload input {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  width: 100%;
+  cursor: pointer;
+}
+.profile-settings {
+  max-width: none;
+  margin-top: 28px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+}
+.profile-settings .settings-panel {
+  margin: 0;
+}
+@media (max-width: 700px) {
+  .profile-settings {
+    grid-template-columns: 1fr;
+  }
+}

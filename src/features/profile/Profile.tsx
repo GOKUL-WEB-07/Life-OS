@@ -1,3 +1,4 @@
+import { ProfileSettings } from "../settings/Settings";
 import { useState, type FormEvent } from "react";
 import { MapPin, Camera, Check, UserRound } from "lucide-react";
 import { useAuth } from "../../app/providers/AuthProvider";
@@ -26,6 +27,7 @@ export function Profile() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const { url } = useAttachmentUrl(saved.avatar);
+  const { url: bannerUrl, error: bannerError } = useAttachmentUrl(saved.banner);
   const toast = useToast();
   async function save(e: FormEvent) {
     e.preventDefault();
@@ -50,7 +52,49 @@ export function Profile() {
       />
       <div className="profile-layout">
         <section className="profile-feature">
-          <div className={"profile-cover cover-" + saved.cover} />
+          <div
+            className={"profile-cover cover-" + saved.cover}
+            style={
+              bannerUrl ? { backgroundImage: `url("${bannerUrl}")` } : undefined
+            }
+          >
+            <label className="banner-upload">
+              <Camera size={16} />
+              Change banner
+              <input
+                type="file"
+                accept="image/jpeg,image/png,image/webp"
+                aria-label="Profile banner"
+                disabled={busy}
+                onChange={async (e) => {
+                  const file = e.target.files?.[0];
+                  e.target.value = "";
+                  if (!file) return;
+                  setBusy(true);
+                  setError("");
+                  try {
+                    if (!file.type.startsWith("image/"))
+                      throw new Error("Choose a banner image.");
+                    const banner = await storeAttachment(file);
+                    try {
+                      saveProfilePreferences({ ...saved, banner });
+                      setDraft((previous) => ({ ...previous, banner }));
+                    } catch (err) {
+                      await deleteAttachment(banner.id);
+                      throw err;
+                    }
+                    if (saved.banner)
+                      void deleteAttachment(saved.banner.id).catch(() => {});
+                    toast("Banner updated.");
+                  } catch (err) {
+                    setError((err as Error).message);
+                  } finally {
+                    setBusy(false);
+                  }
+                }}
+              />
+            </label>
+          </div>
           <div className="profile-feature-body">
             <div className="profile-portrait">
               {url ? (
@@ -159,6 +203,31 @@ export function Profile() {
               onChange={(e) => setDraft({ ...draft, bio: e.target.value })}
             />
           </Field>
+          {bannerError && (
+            <p role="alert" className="form-error">
+              {bannerError}
+            </p>
+          )}
+          {saved.banner && (
+            <button
+              type="button"
+              className="text-button"
+              disabled={busy}
+              onClick={() => {
+                try {
+                  const next = { ...saved, banner: undefined };
+                  saveProfilePreferences(next);
+                  setDraft((previous) => ({ ...previous, banner: undefined }));
+                  void deleteAttachment(saved.banner!.id).catch(() => {});
+                  toast("Default banner restored.");
+                } catch (err) {
+                  setError((err as Error).message);
+                }
+              }}
+            >
+              Restore default banner
+            </button>
+          )}
           <Field label="Cover style">
             <select
               value={draft.cover}
@@ -183,6 +252,7 @@ export function Profile() {
           </p>
         </form>
       </div>
+      <ProfileSettings />
     </>
   );
 }

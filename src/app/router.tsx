@@ -23,7 +23,7 @@ import { Calendar } from "../features/calendar/Calendar";
 import { Reminders } from "../features/reminders/Reminders";
 import { Search } from "../features/search/Search";
 import { Areas } from "../features/areas/Areas";
-import { Settings } from "../features/settings/Settings";
+
 import {
   Skeleton,
   ErrorState,
@@ -94,7 +94,7 @@ export const router = createRouter([
           { path: "/ideas", element: <LifeModule type="ideas" /> },
           { path: "/review", element: <Review /> },
           { path: "/archive", element: <Review archive /> },
-          { path: "/settings", element: <Settings /> },
+          { path: "/settings", element: <Navigate to="/profile" replace /> },
           { path: "/profile", element: <Profile /> },
           { path: "/areas", element: <Navigate to="/projects" replace /> },
           { path: "/settings/areas", element: <Areas /> },

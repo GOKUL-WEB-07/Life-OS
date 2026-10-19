@@ -1,18 +1,15 @@
 import { resetDemo } from "../../services/demoService";
-import { useEffect, useState, type FormEvent } from "react";
-import { Link } from "react-router-dom";
-import { ArrowUpRight, Monitor, Sun, Moon } from "lucide-react";
-import { useAuth } from "../../app/providers/AuthProvider";
+import { useEffect, useState } from "react";
+
+import { Monitor, Sun, Moon } from "lucide-react";
+
 import { useToast } from "../../components/feedback/Feedback";
-import { PageHeader, Field } from "../../components/ui/Fields";
-import { renameProfile, isDemo } from "../../services/authService";
-import { saveUserProfile } from "../../services/userService";
-import { errorMessage } from "../../utils/errors";
-export function Settings() {
-  const { user } = useAuth();
+
+import { isDemo } from "../../services/authService";
+
+export function ProfileSettings() {
   const toast = useToast();
-  const [name, setName] = useState(user?.displayName || "");
-  const [busy, setBusy] = useState(false);
+
   const [resetConfirm, setResetConfirm] = useState(false);
   const [theme, setTheme] = useState(
     localStorage.getItem("project-os-theme") || "dark",
@@ -27,19 +24,6 @@ export function Settings() {
     });
     return () => observer.disconnect();
   }, []);
-  async function save(e: FormEvent) {
-    e.preventDefault();
-    setBusy(true);
-    try {
-      await saveUserProfile(name.trim());
-      await renameProfile(name.trim());
-      toast("Profile updated.");
-    } catch (err) {
-      toast(errorMessage(err));
-    } finally {
-      setBusy(false);
-    }
-  }
   function appearance(value: string) {
     setTheme(value);
     localStorage.setItem("project-os-theme", value);
@@ -47,27 +31,7 @@ export function Settings() {
   }
   return (
     <>
-      <PageHeader
-        title="Settings"
-        description="Make this space feel like yours."
-      />
-      <div className="settings-column">
-        <section className="panel settings-panel">
-          <h2>Profile</h2>
-          <form onSubmit={save}>
-            <Field label="Display name">
-              <input
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                required
-                maxLength={100}
-              />
-            </Field>
-            <button className="button" disabled={busy}>
-              {busy ? "Saving…" : "Save profile"}
-            </button>
-          </form>
-        </section>
+      <div className="settings-column profile-settings">
         <section className="panel settings-panel">
           <h2>Appearance</h2>
           <p>Choose a comfortable view for your workspace.</p>

@@ -6,6 +6,7 @@ export type ProfilePreferences = {
   role: string;
   location: string;
   avatar?: Attachment;
+  banner?: Attachment;
   cover: string;
   accent: string;
 };

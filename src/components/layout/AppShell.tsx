@@ -111,7 +111,7 @@ export function AppShell() {
             </button>
           )}
         </header>
-        <main id="main-content" className="main-content">
+        <main id="main-content" className="main-content" tabIndex={-1}>
           {error ? (
             <ErrorState message={error} retry={retry} />
           ) : loading ? (

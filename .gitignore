@@ -16,3 +16,5 @@ output/
 *.pem
 *.key
 *service-account*.json
+
+.playwright-cli/

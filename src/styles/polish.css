@@ -716,3 +716,31 @@ textarea {
     grid-template-columns: 1fr;
   }
 }
+.install-panel h2 {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.install-help-button {
+  display: block;
+  margin-top: 16px;
+}
+.install-instructions {
+  margin-top: 20px;
+  border-top: 1px solid var(--border);
+  padding-top: 8px;
+}
+.install-instructions h3 {
+  font-size: 14px;
+  margin: 18px 0 6px;
+}
+.install-instructions p {
+  line-height: 1.65;
+  font-size: 13px;
+}
+.install-panel > p[role="status"] {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--success);
+}

@@ -1,3 +1,4 @@
+import { InstallApp } from "../../components/InstallApp";
 import { resetDemo } from "../../services/demoService";
 import { useEffect, useState } from "react";
 
@@ -32,6 +33,7 @@ export function ProfileSettings() {
   return (
     <>
       <div className="settings-column profile-settings">
+        <InstallApp />
         <section className="panel settings-panel">
           <h2>Appearance</h2>
           <p>Choose a comfortable view for your workspace.</p>
